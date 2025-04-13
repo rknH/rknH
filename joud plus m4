@@ -1,0 +1,17 @@
+jood-pro/
+├── docker-compose.yml
+├── api/                  # حاوية FastAPI (Python)
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── src/
+├── ml-models/            # حاوية نماذج ML (Python)
+│   ├── Dockerfile
+│   └── models/
+├── frontend/             # حاوية واجهة المستخدم (React/TypeScript)
+│   ├── Dockerfile
+│   └── src/
+├── db/                   # حاوية قاعدة البيانات (PostgreSQL)
+│   └── init.sql
+└── traefik/              # حاوية Reverse Proxy (Go)
+    ├── Dockerfile
+    └── traefik.yml
