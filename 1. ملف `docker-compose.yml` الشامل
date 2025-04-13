@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # واجهة API الأساسية
+  api:
+    build: ./api
+    container_name: jood-api
+    environment:
+      - DB_URL=postgresql://jood:password@db:5432/jood
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./api/src:/app/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - ml-models
+    networks:
+      - jood-net
+
+  # jood نماذج ML
+  ml-models:
+    build: ./ml-models
+    container_name: jood-ml
+    environment:
+      - MODEL_CACHE_DIR=/models/cache
+    volumes:
+      - model-cache:/models/cache
+      - ./ml-models/models:/models
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+    networks:
+      - jood-net
+
+  # واجهة المستخدم
+  frontend:
+    build: ./frontend
+    container_name: jood-frontend
+    volumes:
+      - ./frontend/src:/app/src
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - jood-net
+
+  # قاعدةjood
+  db:
+    image: postgres:15
+    container_name: jood-db
+    environment:
+      - POSTGRES_USER=jood
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=jood
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - jood-net
+
+  # Reverse Proxy
+  traefik:
+    build: ./traefik
+    container_name: jood-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jood-net
+
+volumes:
+  db-data:
+  model-cache:
+
+networks:
+  jood-net:
+    driver: bridge
